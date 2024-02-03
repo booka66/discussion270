@@ -16,6 +16,7 @@ class Discussion():
         self.url = "https://gmdsta5199.execute-api.us-east-1.amazonaws.com/Prod"
         self.submit_url = self.url + "/submit"
         self.fetch_url = self.url + "/fetch"
+        self.local_save_path = f"saved_answers_{self.net_id}_{self.question_id}.json"
         for box in self.boxes:
             box.children[1].observe(
                 lambda change: self.save_answers(), names='value')
@@ -27,10 +28,13 @@ class Discussion():
             "net_id": f"{self.net_id}_{self.question_id}",
             "question": self.question_id
         }
-        response = requests.post(self.fetch_url, json=data)
-        if response.status_code == 200:
-            return response.json()['answers']
-        return []
+        try:
+            response = requests.post(self.fetch_url, json=data)
+            if response.status_code == 200:
+                return response.json()['answers']
+        except requests.exceptions.RequestException:
+            pass  # Student boi got no internet
+        return self.load_local_answers()
 
     def print_answers(self):
         for box in self.boxes:
@@ -56,8 +60,12 @@ class Discussion():
             if response.status_code != 200:
                 print(
                     f"Failed to save answers: {response.status_code}, {response.text}")
-        except Exception as e:
+                # Save locally if submission fails
+                self.save_local_answers(data)
+        except requests.exceptions.RequestException as e:
             print(f"An error occurred while saving answers: {str(e)}")
+            # Save locally if an error occurs
+            self.save_local_answers(data)
 
     def get_responses(self, x):
         clear_output(wait=True)
@@ -66,3 +74,15 @@ class Discussion():
 
     def submit_answers(self):
         self.save_answers()
+
+    def save_local_answers(self, data):
+        with open(self.local_save_path, 'w') as file:
+            json.dump(data, file)
+        print("Answers saved locally due to connectivity issues.")
+
+    def load_local_answers(self):
+        if os.path.exists(self.local_save_path):
+            with open(self.local_save_path, 'r') as file:
+                data = json.load(file)
+            return data.get('answers', [])
+        return []
