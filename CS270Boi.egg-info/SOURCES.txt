@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.py
 CS270Boi/__init__.py
