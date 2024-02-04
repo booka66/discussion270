@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='CS270Boi',
-    version='1.3.0',
+    version='1.3.3',
     author='Jake Cahoon',
     author_email='jacobbcahoon@gmail.com',
     packages=find_packages(),
