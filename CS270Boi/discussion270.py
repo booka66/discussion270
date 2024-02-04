@@ -14,7 +14,6 @@ def internet_connection_available(host="8.8.8.8", port=53, timeout=3):
         socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
         return True
     except socket.error as ex:
-        # print("No internet connection available.")
         return False
 
 
@@ -46,13 +45,15 @@ class Discussion():
             return data
 
         data = {
-            "net_id": f"{self.net_id}_{self.question_id}",
-            "question": self.question_id
+            "net_id": self.net_id,
         }
         try:
             response = requests.post(self.fetch_url, json=data)
             if response.status_code == 200:
-                return response.json()['answers']
+                if self.question_id in response.json():
+                    return response.json()[self.question_id]
+                else:
+                    return []
         except requests.exceptions.RequestException:
             print("Failed to fetch answers due to connectivity issues.")
 
@@ -78,7 +79,7 @@ class Discussion():
 
         answers = [box.children[1].value for box in self.boxes]
         data = {
-            "net_id": f"{self.net_id}_{self.question_id}",
+            "net_id": f"{self.net_id}",
             "answers": answers,
             "question": self.question_id
         }
